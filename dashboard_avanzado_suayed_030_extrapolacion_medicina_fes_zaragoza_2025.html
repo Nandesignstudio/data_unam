@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard avanzado | Modelo SUAyED 0.30% y extrapolación de puntajes altos</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --ink: #172033;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --blue: #1d4ed8;
+      --green: #0f766e;
+      --orange: #b45309;
+      --red: #be123c;
+      --purple: #6d28d9;
+      --soft-blue: #eff6ff;
+      --soft-green: #ecfdf5;
+      --soft-orange: #fffbeb;
+      --soft-red: #fff1f2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      line-height: 1.52;
+    }
+    header {
+      background: radial-gradient(circle at top left, #2563eb 0, #0f172a 42%, #020617 100%);
+      color: white;
+      padding: 46px 20px 80px;
+    }
+    .container {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0 18px;
+    }
+    h1 {
+      margin: 0;
+      max-width: 1050px;
+      font-size: clamp(30px, 4vw, 50px);
+      line-height: 1.08;
+      letter-spacing: -0.045em;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 25px;
+      letter-spacing: -0.025em;
+    }
+    h3 {
+      margin: 16px 0 8px;
+      font-size: 18px;
+    }
+    .subtitle {
+      max-width: 980px;
+      margin: 16px 0 0;
+      color: #dbeafe;
+      font-size: 18px;
+    }
+    .pill {
+      display: inline-block;
+      margin: 20px 10px 0 0;
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.22);
+      font-weight: 800;
+      font-size: 14px;
+    }
+    main {
+      margin-top: -54px;
+      padding-bottom: 56px;
+    }
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+    .kpis {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .two {
+      grid-template-columns: 1.05fr .95fr;
+    }
+    .three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 16px 38px rgba(15, 23, 42, .08);
+    }
+    .kpi {
+      min-height: 124px;
+    }
+    .kpi .label {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .kpi .value {
+      margin-top: 8px;
+      font-size: 31px;
+      font-weight: 950;
+      letter-spacing: -0.05em;
+    }
+    .kpi .note {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .chart {
+      width: 100%;
+      min-height: 430px;
+    }
+    .chart.small {
+      min-height: 365px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      border-radius: 16px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: center;
+    }
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      font-size: 12px;
+    }
+    tr:last-child td { border-bottom: none; }
+    .callout {
+      margin: 16px 0;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border-left: 5px solid var(--blue);
+      background: var(--soft-blue);
+    }
+    .callout.green {
+      border-left-color: var(--green);
+      background: var(--soft-green);
+    }
+    .callout.orange {
+      border-left-color: var(--orange);
+      background: var(--soft-orange);
+    }
+    .callout.red {
+      border-left-color: var(--red);
+      background: var(--soft-red);
+    }
+    .method {
+      counter-reset: step;
+      list-style: none;
+      padding: 0;
+      margin: 12px 0 0;
+    }
+    .method li {
+      counter-increment: step;
+      position: relative;
+      padding-left: 48px;
+      margin: 14px 0;
+    }
+    .method li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--soft-blue);
+      color: var(--blue);
+      font-weight: 950;
+    }
+    .formula {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-family: Consolas, monospace;
+      overflow-x: auto;
+      font-size: 14px;
+      margin: 12px 0;
+    }
+    .tag {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 28px;
+    }
+    @media (max-width: 1020px) {
+      .kpis, .two, .three { grid-template-columns: 1fr; }
+      header { padding-bottom: 44px; }
+      main { margin-top: -26px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="container">
+    <h1>Dashboard avanzado: integración del hallazgo SUAyED 0.30%</h1>
+    <p class="subtitle">Modelo de sensibilidad para Medicina, FES Zaragoza 2025. Integra el hallazgo empírico de que en ediciones en línea SUAyED hasta 0.30% de aspirantes logra 115–120 aciertos, y compara ese umbral contra escenarios de duplicación, triplicación y corrimiento de cola alta.</p>
+    <span class="pill">UNAM · Licenciatura 2025</span>
+    <span class="pill">Médico Cirujano · FES Zaragoza</span>
+    <span class="pill">Modelo binomial de cola alta</span>
+  </div>
+</header>
+
+<main class="container">
+  <section class="grid kpis">
+    <div class="card kpi">
+      <div class="label">Presentaron</div>
+      <div class="value">3,943</div>
+      <div class="note">Denominador principal</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Tasa SUAyED</div>
+      <div class="value">0.30%</div>
+      <div class="note">Para 115–120 aciertos</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Esperados 115–120</div>
+      <div class="value">11.8</div>
+      <div class="note">≈ 12 sustentantes</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Observados 115–120</div>
+      <div class="value">13</div>
+      <div class="note">0.33% de sustentantes</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Corte original</div>
+      <div class="value">109</div>
+      <div class="note">Aciertos mínimos</div>
+    </div>
+    <div class="card kpi">
+      <div class="label">Corte ×3 reformulado</div>
+      <div class="value">116</div>
+      <div class="note">Escenario de estrés</div>
+    </div>
+  </section>
+
+  <section class="grid two" style="margin-top:18px;">
+    <div class="card">
+      <h2>Resumen ejecutivo</h2>
+      <p>El hallazgo SUAyED se incorpora como una <strong>tasa externa de cola alta</strong>: la proporción esperada de sustentantes con <strong>115 a 120 aciertos</strong>. Para este dataset, usando como denominador a quienes presentaron examen, el valor esperado es:</p>
+      <div class="formula">H<sub>115–120</sub> = N × p = 3,943 × 0.003 = 11.83</div>
+      <p>El dataset original tiene <strong>13</strong> aspirantes en 115–120, equivalente a <strong>0.33%</strong>. Es decir, el dato observado está muy cerca del hallazgo SUAyED de 0.30%.</p>
+      <div class="callout green">
+        Lectura central: el hallazgo SUAyED no empuja por sí mismo el corte hacia arriba; más bien funciona como control de plausibilidad. El dataset original ya es compatible con una cola alta de alrededor de 0.30%.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Metodología estadística</h2>
+      <ol class="method">
+        <li>Se define el evento de cola alta: obtener <strong>115–120 aciertos</strong>.</li>
+        <li>Se usa el hallazgo empírico SUAyED como parámetro: <strong>p = 0.003</strong>.</li>
+        <li>Se modela el número de sustentantes de cola alta como <strong>Binomial(N, p)</strong>.</li>
+        <li>Se compara el número observado contra el esperado, usando desviación estándar y z-score.</li>
+        <li>Se evalúan escenarios de estrés: duplicar, triplicar y reformular la cola alta.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="grid three" style="margin-top:18px;">
+    <div class="card">
+      <h2>Modelo binomial</h2>
+      <div class="formula">H ~ Binomial(N = 3,943, p = 0.003)</div>
+      <p>Media esperada: <strong>11.83</strong></p>
+      <p>Desviación estándar: <strong>3.43</strong></p>
+    </div>
+    <div class="card">
+      <h2>Rango aproximado</h2>
+      <p>Intervalo central aproximado 80%:</p>
+      <div class="callout"><strong>7 a 17</strong> sustentantes con 115–120</div>
+      <p>Intervalo aproximado 95%:</p>
+      <div class="callout orange"><strong>5 a 19</strong> sustentantes con 115–120</div>
+    </div>
+    <div class="card">
+      <h2>Dato observado</h2>
+      <p>Observados con 115–120:</p>
+      <div class="callout green"><strong>13</strong> sustentantes</div>
+      <p>Probabilidad acumulada aproximada de observar al menos 13: <strong>40.4%</strong></p>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:18px;">
+    <h2>1. Distribución original de aciertos</h2>
+    <p>La línea punteada marca el corte original. La zona de 115–120 es la cola alta usada para introducir el hallazgo SUAyED.</p>
+    <div id="chartOriginal" class="chart"></div>
+  </section>
+
+  <section class="grid two" style="margin-top:18px;">
+    <div class="card">
+      <h2>2. Distribución binomial esperada de cola alta</h2>
+      <p>La curva muestra cuántos sustentantes con 115–120 serían esperables si la tasa fuera 0.30%. La línea verde marca el dato observado.</p>
+      <div id="chartBinomial" class="chart small"></div>
+    </div>
+    <div class="card">
+      <h2>3. Asignación central restringida por SUAyED</h2>
+      <p>Se toma el número esperado redondeado, <strong>12</strong>, y se reparte entre 115–120 siguiendo la forma observada de la cola alta. Este es el escenario “controlado” por el hallazgo externo.</p>
+      <table>
+        <thead>
+          <tr><th>Puntaje</th><th>Aspirantes asignados</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>120</td><td>0</td></tr>
+<tr><td>119</td><td>0</td></tr>
+<tr><td>118</td><td>0</td></tr>
+<tr><td>117</td><td>1</td></tr>
+<tr><td>116</td><td>3</td></tr>
+<tr><td>115</td><td>8</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">
+        Corte estimado bajo restricción SUAyED 0.30%: <strong>108 aciertos</strong>.
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:18px;">
+    <h2>4. Comparación de escenarios y plausibilidad</h2>
+    <p>La plausibilidad se calcula comparando cuántos sustentantes 115–120 produce cada escenario contra el valor esperado por SUAyED. Mientras más alto el z-score, más se aleja del parámetro empírico externo.</p>
+    <div id="chartScenarios" class="chart"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Escenario</th>
+          <th>Corte</th>
+          <th>H 115–120</th>
+          <th>% sustentantes</th>
+          <th>z-score</th>
+          <th>Plausibilidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Original observado</td><td>108</td><td>13</td><td>0.33%</td><td>0.34</td><td>Alta</td></tr>
+<tr><td>Modelo SUAyED 0.30%</td><td>108</td><td>12</td><td>0.30%</td><td>0.05</td><td>Alta</td></tr>
+<tr><td>Duplicar cola original</td><td>112</td><td>26</td><td>0.66%</td><td>4.13</td><td>Muy baja</td></tr>
+<tr><td>Triplicar cola original</td><td>113</td><td>39</td><td>0.99%</td><td>7.91</td><td>Muy baja</td></tr>
+<tr><td>Reformular + duplicar</td><td>115</td><td>58</td><td>1.47%</td><td>13.44</td><td>Muy baja</td></tr>
+<tr><td>Reformular + triplicar</td><td>116</td><td>87</td><td>2.21%</td><td>21.89</td><td>Muy baja</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="grid two" style="margin-top:18px;">
+    <div class="card">
+      <h2>5. Escenario reformulado + triplicado</h2>
+      <p>Este escenario desplaza el máximo observado de 117 a 120 y luego triplica la frecuencia de la cola alta. Es útil como escenario extremo, pero queda muy por encima del control SUAyED.</p>
+      <div class="callout red">
+        Produce <strong>87</strong> sustentantes en 115–120, equivalente a <strong>2.21%</strong>. Esto es varias veces mayor que 0.30%.
+      </div>
+      <table>
+        <thead>
+          <tr><th>Puntaje reformulado</th><th>Base</th><th>Triplicado</th><th>Acumulado</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>120</td><td>1</td><td>3</td><td>3</td></tr>
+<tr><td>119</td><td>3</td><td>9</td><td>12</td></tr>
+<tr><td>118</td><td>9</td><td>27</td><td>39</td></tr>
+<tr><td>117</td><td>6</td><td>18</td><td>57</td></tr>
+<tr><td>116</td><td>7</td><td>21</td><td>78</td></tr>
+<tr><td>115</td><td>3</td><td>9</td><td>87</td></tr>
+<tr><td>114</td><td>11</td><td>33</td><td>120</td></tr>
+<tr><td>113</td><td>4</td><td>12</td><td>132</td></tr>
+<tr><td>112</td><td>10</td><td>30</td><td>162</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>6. Acumulado de selección en escenario ×3</h2>
+      <p>La línea roja marca el cupo de 58. El primer punto donde se alcanza ese cupo es el corte del escenario.</p>
+      <div id="chartTripAccum" class="chart small"></div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:18px;">
+    <h2>Conclusión técnica</h2>
+    <p>La integración del hallazgo SUAyED permite pasar de un ejercicio arbitrario de multiplicación a un análisis con <strong>control externo de plausibilidad</strong>. Bajo el parámetro 0.30%, esperaríamos alrededor de <strong>11.8</strong> sustentantes con 115–120 aciertos; el dataset original tiene <strong>13</strong>, por lo que es compatible con ese hallazgo.</p>
+    <p>Los escenarios de duplicación y triplicación siguen siendo útiles como pruebas de estrés, pero no deberían presentarse como predicción central. La predicción central restringida por SUAyED conserva un corte cercano al observado, mientras que el escenario reformulado + triplicado lleva el corte a <strong>116</strong> aciertos, pero con una cola alta de <strong>87</strong> sustentantes, mucho mayor al 0.30% esperado.</p>
+    <div class="callout orange">
+      Recomendación metodológica: reportar dos capas. Primero, el modelo central calibrado por SUAyED 0.30%; segundo, escenarios de estrés —duplicado/triplicado— claramente etiquetados como contrafactuales extremos.
+    </div>
+  </section>
+
+  <footer>
+    Dashboard generado a partir de medicina.htm · Gráficas interactivas con Plotly · Modelo exploratorio no causal.
+  </footer>
+</main>
+
+<script>
+const summary = {"oferta": 50, "aspirantes": 4481, "presentaron": 3943, "seleccionados": 58, "corte_original": 109, "maximo_observado": 117, "p_suayed": 0.003, "p_suayed_pct": 0.3, "H_observed": 13, "H_expected_presentaron": 11.829, "H_expected_aspirantes": 13.443, "sd": 3.434168458302534, "low_80": 7, "high_80": 17, "low_95": 5, "high_95": 19, "tail_ge_observed": 0.4044563819362436, "corte_constrained": 108, "cut_trip_ref": 116, "cut_dup_ref": 115};
+const distAll = [{"puntaje": 15, "aspirantes": 1}, {"puntaje": 16, "aspirantes": 0}, {"puntaje": 17, "aspirantes": 0}, {"puntaje": 18, "aspirantes": 0}, {"puntaje": 19, "aspirantes": 0}, {"puntaje": 20, "aspirantes": 0}, {"puntaje": 21, "aspirantes": 2}, {"puntaje": 22, "aspirantes": 0}, {"puntaje": 23, "aspirantes": 6}, {"puntaje": 24, "aspirantes": 8}, {"puntaje": 25, "aspirantes": 9}, {"puntaje": 26, "aspirantes": 12}, {"puntaje": 27, "aspirantes": 17}, {"puntaje": 28, "aspirantes": 20}, {"puntaje": 29, "aspirantes": 36}, {"puntaje": 30, "aspirantes": 41}, {"puntaje": 31, "aspirantes": 38}, {"puntaje": 32, "aspirantes": 54}, {"puntaje": 33, "aspirantes": 57}, {"puntaje": 34, "aspirantes": 68}, {"puntaje": 35, "aspirantes": 75}, {"puntaje": 36, "aspirantes": 79}, {"puntaje": 37, "aspirantes": 90}, {"puntaje": 38, "aspirantes": 94}, {"puntaje": 39, "aspirantes": 103}, {"puntaje": 40, "aspirantes": 104}, {"puntaje": 41, "aspirantes": 103}, {"puntaje": 42, "aspirantes": 96}, {"puntaje": 43, "aspirantes": 104}, {"puntaje": 44, "aspirantes": 121}, {"puntaje": 45, "aspirantes": 88}, {"puntaje": 46, "aspirantes": 86}, {"puntaje": 47, "aspirantes": 82}, {"puntaje": 48, "aspirantes": 91}, {"puntaje": 49, "aspirantes": 91}, {"puntaje": 50, "aspirantes": 79}, {"puntaje": 51, "aspirantes": 95}, {"puntaje": 52, "aspirantes": 94}, {"puntaje": 53, "aspirantes": 82}, {"puntaje": 54, "aspirantes": 80}, {"puntaje": 55, "aspirantes": 71}, {"puntaje": 56, "aspirantes": 58}, {"puntaje": 57, "aspirantes": 70}, {"puntaje": 58, "aspirantes": 71}, {"puntaje": 59, "aspirantes": 54}, {"puntaje": 60, "aspirantes": 37}, {"puntaje": 61, "aspirantes": 57}, {"puntaje": 62, "aspirantes": 47}, {"puntaje": 63, "aspirantes": 41}, {"puntaje": 64, "aspirantes": 49}, {"puntaje": 65, "aspirantes": 55}, {"puntaje": 66, "aspirantes": 43}, {"puntaje": 67, "aspirantes": 45}, {"puntaje": 68, "aspirantes": 52}, {"puntaje": 69, "aspirantes": 49}, {"puntaje": 70, "aspirantes": 33}, {"puntaje": 71, "aspirantes": 31}, {"puntaje": 72, "aspirantes": 40}, {"puntaje": 73, "aspirantes": 43}, {"puntaje": 74, "aspirantes": 34}, {"puntaje": 75, "aspirantes": 32}, {"puntaje": 76, "aspirantes": 35}, {"puntaje": 77, "aspirantes": 29}, {"puntaje": 78, "aspirantes": 31}, {"puntaje": 79, "aspirantes": 38}, {"puntaje": 80, "aspirantes": 23}, {"puntaje": 81, "aspirantes": 18}, {"puntaje": 82, "aspirantes": 36}, {"puntaje": 83, "aspirantes": 19}, {"puntaje": 84, "aspirantes": 21}, {"puntaje": 85, "aspirantes": 18}, {"puntaje": 86, "aspirantes": 26}, {"puntaje": 87, "aspirantes": 16}, {"puntaje": 88, "aspirantes": 18}, {"puntaje": 89, "aspirantes": 24}, {"puntaje": 90, "aspirantes": 22}, {"puntaje": 91, "aspirantes": 22}, {"puntaje": 92, "aspirantes": 23}, {"puntaje": 93, "aspirantes": 13}, {"puntaje": 94, "aspirantes": 19}, {"puntaje": 95, "aspirantes": 13}, {"puntaje": 96, "aspirantes": 13}, {"puntaje": 97, "aspirantes": 10}, {"puntaje": 98, "aspirantes": 26}, {"puntaje": 99, "aspirantes": 16}, {"puntaje": 100, "aspirantes": 20}, {"puntaje": 101, "aspirantes": 17}, {"puntaje": 102, "aspirantes": 20}, {"puntaje": 103, "aspirantes": 17}, {"puntaje": 104, "aspirantes": 14}, {"puntaje": 105, "aspirantes": 15}, {"puntaje": 106, "aspirantes": 11}, {"puntaje": 107, "aspirantes": 11}, {"puntaje": 108, "aspirantes": 13}, {"puntaje": 109, "aspirantes": 10}, {"puntaje": 110, "aspirantes": 4}, {"puntaje": 111, "aspirantes": 11}, {"puntaje": 112, "aspirantes": 3}, {"puntaje": 113, "aspirantes": 7}, {"puntaje": 114, "aspirantes": 6}, {"puntaje": 115, "aspirantes": 9}, {"puntaje": 116, "aspirantes": 3}, {"puntaje": 117, "aspirantes": 1}, {"puntaje": 118, "aspirantes": 0}, {"puntaje": 119, "aspirantes": 0}, {"puntaje": 120, "aspirantes": 0}];
+const pmfData = [{"k": 0, "prob": 7.161586186941253e-06, "pct": 0.0007161586186941254}, {"k": 1, "prob": 8.496931093814251e-05, "pct": 0.00849693109381425}, {"k": 2, "prob": 0.0005039353416020427, "pct": 0.05039353416020427}, {"k": 3, "prob": 0.0019919851366636413, "pct": 0.19919851366636412}, {"k": 4, "prob": 0.005904028163331053, "pct": 0.5904028163331053}, {"k": 5, "prob": 0.013995566861802018, "pct": 1.3995566861802018}, {"k": 6, "prob": 0.027640191726066375, "pct": 2.7640191726066377}, {"k": 7, "prob": 0.04677723233651955, "pct": 4.677723233651955}, {"k": 8, "prob": 0.06925094777201891, "pct": 6.925094777201892}, {"k": 9, "prob": 0.09110748227445484, "pct": 9.110748227445484}, {"k": 10, "prob": 0.10784859636941986, "pct": 10.784859636941986}, {"k": 11, "prob": 0.11603041748543676, "pct": 11.603041748543676}, {"k": 12, "prob": 0.11440110369928218, "pct": 11.440110369928219}, {"k": 13, "prob": 0.10409167625381024, "pct": 10.409167625381025}, {"k": 14, "prob": 0.08792383314460687, "pct": 8.792383314460688}, {"k": 15, "prob": 0.06929844341527791, "pct": 6.929844341527791}, {"k": 16, "prob": 0.05119187921299115, "pct": 5.1191879212991145}, {"k": 17, "prob": 0.03558272045597078, "pct": 3.558272045597078}, {"k": 18, "prob": 0.023353019142450897, "pct": 2.3353019142450897}, {"k": 19, "prob": 0.014516275162453643, "pct": 1.4516275162453642}, {"k": 20, "prob": 0.008569989529207837, "pct": 0.8569989529207838}, {"k": 21, "prob": 0.004817318945849311, "pct": 0.48173189458493115}, {"k": 22, "prob": 0.0025841421864166592, "pct": 0.2584142186416659}, {"k": 23, "prob": 0.0013255969883048783, "pct": 0.13255969883048782}, {"k": 24, "prob": 0.0006514970153153364, "pct": 0.06514970153153364}, {"k": 25, "prob": 0.0003073079401830455, "pct": 0.03073079401830455}, {"k": 26, "prob": 0.0001393448626229271, "pct": 0.01393448626229271}, {"k": 27, "prob": 6.082846616449409e-05, "pct": 0.006082846616449409}, {"k": 28, "prob": 2.5598682493927375e-05, "pct": 0.0025598682493927377}, {"k": 29, "prob": 1.0398662397232284e-05, "pct": 0.0010398662397232284}, {"k": 30, "prob": 4.082283312213356e-06, "pct": 0.0004082283312213356}, {"k": 31, "prob": 1.5505200699541393e-06, "pct": 0.00015505200699541394}, {"k": 32, "prob": 5.703643286416054e-07, "pct": 5.703643286416054e-05}, {"k": 33, "prob": 2.0340064642266057e-07, "pct": 2.0340064642266056e-05}, {"k": 34, "prob": 7.038437614425065e-08, "pct": 7.038437614425065e-06}, {"k": 35, "prob": 2.3653749220336074e-08, "pct": 2.3653749220336074e-06}, {"k": 36, "prob": 7.726416913496606e-09, "pct": 7.726416913496607e-07}, {"k": 37, "prob": 2.4549684904197383e-09, "pct": 2.4549684904197384e-07}, {"k": 38, "prob": 7.593126952103283e-10, "pct": 7.593126952103283e-08}, {"k": 39, "prob": 2.287721684126481e-10, "pct": 2.287721684126481e-08}, {"k": 40, "prob": 6.718604905839857e-11, "pct": 6.7186049058398565e-09}, {"k": 41, "prob": 1.924508766359539e-11, "pct": 1.924508766359539e-09}, {"k": 42, "prob": 5.380020924441124e-12, "pct": 5.380020924441124e-10}, {"k": 43, "prob": 1.4686474511612624e-12, "pct": 1.4686474511612625e-10}, {"k": 44, "prob": 3.9170181404638394e-13, "pct": 3.9170181404638396e-11}, {"k": 45, "prob": 1.0212272637692083e-13, "pct": 1.0212272637692084e-11}];
+const scenarios = [{"escenario": "Original observado", "corte": 108, "H_115_120": 13, "pct_sustentantes": 0.32969819934060357, "z": 0.3409850198725574, "plausibilidad": "Alta", "descripcion": "Dataset real"}, {"escenario": "Modelo SUAyED 0.30%", "corte": 108, "H_115_120": 12, "pct_sustentantes": 0.3043367993913264, "z": 0.049793713405813095, "plausibilidad": "Alta", "descripcion": "Cola 115–120 restringida a la tasa empírica"}, {"escenario": "Duplicar cola original", "corte": 112, "H_115_120": 26, "pct_sustentantes": 0.6593963986812071, "z": 4.126472003940234, "plausibilidad": "Muy baja", "descripcion": "Frecuencias altas originales ×2"}, {"escenario": "Triplicar cola original", "corte": 113, "H_115_120": 39, "pct_sustentantes": 0.9890945980218108, "z": 7.9119589880079095, "plausibilidad": "Muy baja", "descripcion": "Frecuencias altas originales ×3"}, {"escenario": "Reformular + duplicar", "corte": 115, "H_115_120": 58, "pct_sustentantes": 1.4709611970580776, "z": 13.444593810876052, "plausibilidad": "Muy baja", "descripcion": "Máximo desplazado a 120 y frecuencias ×2"}, {"escenario": "Reformular + triplicar", "corte": 116, "H_115_120": 87, "pct_sustentantes": 2.206441795587116, "z": 21.889141698411635, "plausibilidad": "Muy baja", "descripcion": "Máximo desplazado a 120 y frecuencias ×3"}];
+const tripRefRows = [{"puntaje_original": 117, "aspirantes": 1, "puntaje_reformulado": 120, "modelado": 3, "acumulado": 3}, {"puntaje_original": 116, "aspirantes": 3, "puntaje_reformulado": 119, "modelado": 9, "acumulado": 12}, {"puntaje_original": 115, "aspirantes": 9, "puntaje_reformulado": 118, "modelado": 27, "acumulado": 39}, {"puntaje_original": 114, "aspirantes": 6, "puntaje_reformulado": 117, "modelado": 18, "acumulado": 57}, {"puntaje_original": 113, "aspirantes": 7, "puntaje_reformulado": 116, "modelado": 21, "acumulado": 78}, {"puntaje_original": 112, "aspirantes": 3, "puntaje_reformulado": 115, "modelado": 9, "acumulado": 87}, {"puntaje_original": 111, "aspirantes": 11, "puntaje_reformulado": 114, "modelado": 33, "acumulado": 120}, {"puntaje_original": 110, "aspirantes": 4, "puntaje_reformulado": 113, "modelado": 12, "acumulado": 132}, {"puntaje_original": 109, "aspirantes": 10, "puntaje_reformulado": 112, "modelado": 30, "acumulado": 162}];
+
+const layoutBase = {
+  paper_bgcolor: "white",
+  plot_bgcolor: "white",
+  font: { family: "Inter, Arial, sans-serif", color: "#172033" },
+  margin: { l: 58, r: 26, t: 46, b: 66 },
+  hovermode: "x unified"
+};
+
+Plotly.newPlot("chartOriginal", [
+  {
+    type: "bar",
+    x: distAll.map(d => d.puntaje),
+    y: distAll.map(d => d.aspirantes),
+    name: "Aspirantes",
+    marker: { color: distAll.map(d => d.puntaje >= 115 ? "#0f766e" : "#1d4ed8") },
+    hovertemplate: "Aciertos: %{x}<br>Aspirantes: %{y}<extra></extra>"
+  },
+  {
+    type: "scatter",
+    mode: "lines",
+    x: [summary.corte_original, summary.corte_original],
+    y: [0, Math.max(...distAll.map(d => d.aspirantes))],
+    name: "Corte original",
+    line: { color: "#b45309", dash: "dash", width: 3 },
+    hovertemplate: "Corte original: %{x}<extra></extra>"
+  }
+], {
+  ...layoutBase,
+  title: "Distribución original de aciertos: zona 115–120 resaltada",
+  xaxis: { title: "Aciertos", dtick: 5 },
+  yaxis: { title: "Número de aspirantes" }
+}, {responsive: true, displaylogo: false});
+
+Plotly.newPlot("chartBinomial", [
+  {
+    type: "bar",
+    x: pmfData.map(d => d.k),
+    y: pmfData.map(d => d.pct),
+    name: "Probabilidad",
+    marker: { color: pmfData.map(d => d.k === summary.H_observed ? "#0f766e" : "#1d4ed8") },
+    hovertemplate: "H 115–120: %{x}<br>Probabilidad: %{y:.2f}%<extra></extra>"
+  },
+  {
+    type: "scatter",
+    mode: "lines",
+    x: [summary.H_expected_presentaron, summary.H_expected_presentaron],
+    y: [0, Math.max(...pmfData.map(d => d.pct))],
+    name: "Valor esperado",
+    line: { color: "#b45309", dash: "dash", width: 3 },
+    hovertemplate: "Esperado: %{x:.2f}<extra></extra>"
+  },
+  {
+    type: "scatter",
+    mode: "lines",
+    x: [summary.H_observed, summary.H_observed],
+    y: [0, Math.max(...pmfData.map(d => d.pct))],
+    name: "Observado",
+    line: { color: "#0f766e", width: 3 },
+    hovertemplate: "Observado: %{x}<extra></extra>"
+  }
+], {
+  ...layoutBase,
+  title: "Modelo Binomial(N, 0.003) para sustentantes con 115–120",
+  xaxis: { title: "Número de sustentantes con 115–120", dtick: 2 },
+  yaxis: { title: "Probabilidad (%)" }
+}, {responsive: true, displaylogo: false});
+
+Plotly.newPlot("chartScenarios", [
+  {
+    type: "bar",
+    x: scenarios.map(d => d.escenario),
+    y: scenarios.map(d => d.corte),
+    name: "Corte estimado",
+    marker: { color: "#1d4ed8" },
+    text: scenarios.map(d => d.corte),
+    textposition: "outside",
+    yaxis: "y",
+    hovertemplate: "%{x}<br>Corte: %{y}<extra></extra>"
+  },
+  {
+    type: "scatter",
+    mode: "lines+markers",
+    x: scenarios.map(d => d.escenario),
+    y: scenarios.map(d => d.H_115_120),
+    name: "H 115–120",
+    line: { color: "#be123c", width: 4 },
+    marker: { size: 9 },
+    yaxis: "y2",
+    hovertemplate: "%{x}<br>H 115–120: %{y}<extra></extra>"
+  },
+  {
+    type: "scatter",
+    mode: "lines",
+    x: scenarios.map(d => d.escenario),
+    y: scenarios.map(d => summary.H_expected_presentaron),
+    name: "Esperado SUAyED",
+    line: { color: "#0f766e", dash: "dash", width: 3 },
+    yaxis: "y2",
+    hovertemplate: "Esperado SUAyED: %{y:.1f}<extra></extra>"
+  }
+], {
+  ...layoutBase,
+  title: "Cortes estimados vs. tamaño de cola alta",
+  xaxis: { title: "", tickangle: -18 },
+  yaxis: { title: "Corte estimado", range: [105, 120], dtick: 2 },
+  yaxis2: { title: "Sustentantes 115–120", overlaying: "y", side: "right", rangemode: "tozero" },
+  legend: { orientation: "h", y: 1.12 }
+}, {responsive: true, displaylogo: false});
+
+Plotly.newPlot("chartTripAccum", [
+  {
+    type: "bar",
+    x: tripRefRows.map(d => d.puntaje_reformulado),
+    y: tripRefRows.map(d => d.modelado),
+    name: "Frecuencia triplicada",
+    marker: { color: "#1d4ed8" },
+    hovertemplate: "Puntaje: %{x}<br>Triplicados: %{y}<extra></extra>"
+  },
+  {
+    type: "scatter",
+    mode: "lines+markers",
+    x: tripRefRows.map(d => d.puntaje_reformulado),
+    y: tripRefRows.map(d => d.acumulado),
+    name: "Acumulado",
+    line: { color: "#0f766e", width: 4 },
+    marker: { size: 8 },
+    hovertemplate: "Puntaje: %{x}<br>Acumulado: %{y}<extra></extra>"
+  },
+  {
+    type: "scatter",
+    mode: "lines",
+    x: [Math.min(...tripRefRows.map(d => d.puntaje_reformulado)), Math.max(...tripRefRows.map(d => d.puntaje_reformulado))],
+    y: [summary.seleccionados, summary.seleccionados],
+    name: "Cupo",
+    line: { color: "#be123c", dash: "dash", width: 3 },
+    hovertemplate: "Cupo: %{y}<extra></extra>"
+  }
+], {
+  ...layoutBase,
+  title: "Acumulado de selección: escenario reformulado + triplicado",
+  xaxis: { title: "Puntaje reformulado", dtick: 1, autorange: "reversed" },
+  yaxis: { title: "Aspirantes acumulados" },
+  annotations: [{
+    x: summary.cut_trip_ref,
+    y: summary.seleccionados,
+    text: "Corte ×3: " + summary.cut_trip_ref,
+    showarrow: true,
+    arrowhead: 3,
+    ax: 42,
+    ay: -48,
+    bgcolor: "white",
+    bordercolor: "#0f766e",
+    borderwidth: 1
+  }]
+}, {responsive: true, displaylogo: false});
+</script>
+</body>
+</html>
