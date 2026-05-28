@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Histograma porcentual de aciertos UNAM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f7f9fc;
+        margin: 0;
+        padding: 32px;
+        color: #1f2937;
+    }
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 28px;
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    h1 {
+        margin: 0 0 8px 0;
+        font-size: 26px;
+        color: #111827;
+    }
+    .subtitle {
+        margin-bottom: 24px;
+        color: #6b7280;
+        font-size: 15px;
+    }
+    .chart-wrap {
+        position: relative;
+        height: 520px;
+        border-left: 2px solid #111827;
+        border-bottom: 2px solid #111827;
+        padding: 20px 20px 48px 20px;
+        background:
+            linear-gradient(to top, rgba(17,24,39,0.08) 1px, transparent 1px);
+        background-size: 100% 10%;
+    }
+    .bars {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 10px;
+        height: 100%;
+    }
+    .bar-group {
+        flex: 1;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        position: relative;
+    }
+    .bar {
+        width: 100%;
+        max-width: 62px;
+        background: #2563eb;
+        border-radius: 8px 8px 0 0;
+        cursor: pointer;
+        transition: transform 0.15s ease, background 0.15s ease;
+        position: relative;
+    }
+    .bar:hover {
+        background: #1d4ed8;
+        transform: translateY(-4px);
+    }
+    .label {
+        position: absolute;
+        bottom: -36px;
+        font-size: 12px;
+        color: #374151;
+        transform: rotate(-35deg);
+        transform-origin: top center;
+        white-space: nowrap;
+    }
+    .tooltip {
+        position: absolute;
+        display: none;
+        pointer-events: none;
+        background: #111827;
+        color: white;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        line-height: 1.35;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        z-index: 10;
+        min-width: 165px;
+    }
+    .tooltip strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
+    .axis-y {
+        position: absolute;
+        top: 50%;
+        left: -58px;
+        transform: rotate(-90deg);
+        font-size: 14px;
+        color: #374151;
+        white-space: nowrap;
+    }
+    .axis-x {
+        text-align: center;
+        margin-top: 48px;
+        font-size: 14px;
+        color: #374151;
+    }
+    .note {
+        margin-top: 18px;
+        font-size: 13px;
+        color: #6b7280;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Histograma porcentual de aciertos</h1>
+    <div class="subtitle">
+        Distribución por grupos de 10 aciertos. Porcentaje calculado sobre 2,248 aspirantes con aciertos numéricos.
+    </div>
+
+    <div class="chart-wrap" id="chart">
+        <div class="axis-y">% de aspirantes</div>
+        <div class="bars">
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 2.40%;"
+                     data-grupo="0-9"
+                     data-porcentaje="0.53"
+                     data-aspirantes="12">
+                </div>
+                <div class="label">0-9</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 1.00%;"
+                     data-grupo="10-19"
+                     data-porcentaje="0.22"
+                     data-aspirantes="5">
+                </div>
+                <div class="label">10-19</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 6.42%;"
+                     data-grupo="20-29"
+                     data-porcentaje="1.42"
+                     data-aspirantes="32">
+                </div>
+                <div class="label">20-29</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 53.32%;"
+                     data-grupo="30-39"
+                     data-porcentaje="11.79"
+                     data-aspirantes="265">
+                </div>
+                <div class="label">30-39</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 100.00%;"
+                     data-grupo="40-49"
+                     data-porcentaje="22.11"
+                     data-aspirantes="497">
+                </div>
+                <div class="label">40-49</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 90.32%;"
+                     data-grupo="50-59"
+                     data-porcentaje="19.97"
+                     data-aspirantes="449">
+                </div>
+                <div class="label">50-59</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 62.37%;"
+                     data-grupo="60-69"
+                     data-porcentaje="13.79"
+                     data-aspirantes="310">
+                </div>
+                <div class="label">60-69</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 42.47%;"
+                     data-grupo="70-79"
+                     data-porcentaje="9.39"
+                     data-aspirantes="211">
+                </div>
+                <div class="label">70-79</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 33.20%;"
+                     data-grupo="80-89"
+                     data-porcentaje="7.34"
+                     data-aspirantes="165">
+                </div>
+                <div class="label">80-89</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 31.57%;"
+                     data-grupo="90-99"
+                     data-porcentaje="6.98"
+                     data-aspirantes="157">
+                </div>
+                <div class="label">90-99</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 25.15%;"
+                     data-grupo="100-109"
+                     data-porcentaje="5.56"
+                     data-aspirantes="125">
+                </div>
+                <div class="label">100-109</div>
+            </div>
+
+            <div class="bar-group">
+                <div class="bar"
+                     style="height: 4.03%;"
+                     data-grupo="110-119"
+                     data-porcentaje="0.89"
+                     data-aspirantes="20">
+                </div>
+                <div class="label">110-119</div>
+            </div>
+
+        </div>
+        <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <div class="axis-x">Grupo de aciertos</div>
+    <div class="note">
+        Nota: el porcentaje se calculó excluyendo registros sin aciertos numéricos, como no presentados, cancelados o casos sin dato de aciertos.
+    </div>
+</div>
+
+<script>
+const tooltip = document.getElementById('tooltip');
+const chart = document.getElementById('chart');
+
+document.querySelectorAll('.bar').forEach(bar => {
+    bar.addEventListener('mousemove', (event) => {
+        const grupo = bar.dataset.grupo;
+        const porcentaje = bar.dataset.porcentaje;
+        const aspirantes = bar.dataset.aspirantes;
+
+        tooltip.innerHTML = `
+            <strong>${grupo} aciertos</strong>
+            ${porcentaje}% de aspirantes<br>
+            ${aspirantes} aspirantes
+        `;
+
+        const rect = chart.getBoundingClientRect();
+        tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+        tooltip.style.top = (event.clientY - rect.top - 48) + 'px';
+        tooltip.style.display = 'block';
+    });
+
+    bar.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+    });
+});
+</script>
+</body>
+</html>
