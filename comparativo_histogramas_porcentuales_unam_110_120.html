@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Comparativo de histogramas porcentuales de aciertos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    :root {
+        --bg: #f7f9fc;
+        --card: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --grid: rgba(17,24,39,0.08);
+        --line: #111827;
+        --blue: #2563eb;
+        --blue-dark: #1d4ed8;
+        --border: #dbeafe;
+        --soft-blue: #eff6ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: Arial, sans-serif;
+        background: var(--bg);
+        margin: 0;
+        padding: 32px;
+        color: var(--text);
+    }
+    .container {
+        max-width: 1280px;
+        margin: 0 auto;
+    }
+    .hero {
+        background: var(--card);
+        padding: 28px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        margin-bottom: 24px;
+    }
+    h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        color: var(--text);
+    }
+    .subtitle {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.45;
+        max-width: 980px;
+    }
+    .comparison-note {
+        margin-top: 16px;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        color: #9a3412;
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+    }
+    .dashboard {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    .panel {
+        background: var(--card);
+        padding: 28px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+    h2 {
+        margin: 0 0 6px 0;
+        font-size: 23px;
+        color: var(--text);
+    }
+    .panel p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: var(--soft-blue);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+    }
+    .stat-label {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.25;
+    }
+    .stat-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-top: 3px;
+    }
+    .chart-wrap {
+        position: relative;
+        height: 520px;
+        border-left: 2px solid var(--line);
+        border-bottom: 2px solid var(--line);
+        padding: 20px 20px 48px 20px;
+        background:
+            linear-gradient(to top, var(--grid) 1px, transparent 1px);
+        background-size: 100% 10%;
+    }
+    .bars {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 10px;
+        height: 100%;
+    }
+    .bar-group {
+        flex: 1;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        position: relative;
+    }
+    .bar {
+        width: 100%;
+        max-width: 62px;
+        background: var(--blue);
+        border-radius: 8px 8px 0 0;
+        cursor: pointer;
+        transition: transform 0.15s ease, background 0.15s ease;
+        position: relative;
+        min-height: 0;
+    }
+    .bar:hover {
+        background: var(--blue-dark);
+        transform: translateY(-4px);
+    }
+    .bar[style*="height: 0.00%"] {
+        border-top: 2px solid var(--blue);
+    }
+    .x-label {
+        position: absolute;
+        bottom: -36px;
+        font-size: 12px;
+        color: #374151;
+        transform: rotate(-35deg);
+        transform-origin: top center;
+        white-space: nowrap;
+    }
+    .tooltip {
+        position: absolute;
+        display: none;
+        pointer-events: none;
+        background: #111827;
+        color: white;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        line-height: 1.35;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        z-index: 10;
+        min-width: 205px;
+    }
+    .tooltip strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
+    .axis-y {
+        position: absolute;
+        top: 50%;
+        left: -58px;
+        transform: rotate(-90deg);
+        font-size: 14px;
+        color: #374151;
+        white-space: nowrap;
+    }
+    .axis-x {
+        text-align: center;
+        margin-top: 48px;
+        font-size: 14px;
+        color: #374151;
+    }
+    .footer-note {
+        margin: 22px 0 0 0;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.45;
+    }
+    @media (min-width: 1100px) {
+        .dashboard {
+            grid-template-columns: 1fr 1fr;
+            align-items: start;
+        }
+        .chart-wrap { height: 500px; }
+    }
+    @media (max-width: 720px) {
+        body { padding: 16px; }
+        .panel, .hero { padding: 18px; }
+        .bars { gap: 5px; }
+        .x-label { font-size: 10px; }
+        .axis-y {
+            left: -52px;
+            font-size: 12px;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <header class="hero">
+        <h1>Comparativo de histogramas porcentuales de aciertos</h1>
+        <div class="subtitle">
+            Ambos histogramas usan exactamente las mismas 12 clases:
+            0–9, 10–19, 20–29, 30–39, 40–49, 50–59, 60–69, 70–79, 80–89, 90–99, 100–109 y 110–120.
+            El porcentaje se calcula sobre los aspirantes con aciertos numéricos en cada modalidad.
+        </div>
+        <div class="comparison-note">
+            Para facilitar la comparación visual, ambos gráficos usan la misma escala vertical porcentual.
+            Pasa el mouse por cualquier barra para ver porcentaje y número de aspirantes.
+        </div>
+    </header>
+
+    <main class="dashboard">
+        
+    <section class="panel">
+        <div class="panel-head">
+            <div>
+                <h2>Examen en línea</h2>
+                <p>12 clases fijas de 10 aciertos; la última clase agrupa 110–120.</p>
+            </div>
+        </div>
+        <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Oferta</div>
+            <div class="stat-value">470</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Aspirantes reportados</div>
+            <div class="stat-value">3,053</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Registros detectados</div>
+            <div class="stat-value">3,053</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Presentaron examen</div>
+            <div class="stat-value">2,272</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Con aciertos numéricos</div>
+            <div class="stat-value">2,248</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Sin aciertos numéricos</div>
+            <div class="stat-value">805</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Aciertos mínimos</div>
+            <div class="stat-value">80</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Seleccionados reportados</div>
+            <div class="stat-value">483</div>
+        </div></div>
+        <div class="chart-wrap" id="chart-online">
+            <div class="axis-y">% de aspirantes</div>
+            <div class="bars">
+    
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 2.27%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="0-9"
+                         data-porcentaje="0.53"
+                         data-aspirantes="12">
+                    </div>
+                    <div class="x-label">0-9</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 0.94%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="10-19"
+                         data-porcentaje="0.22"
+                         data-aspirantes="5">
+                    </div>
+                    <div class="x-label">10-19</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 6.08%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="20-29"
+                         data-porcentaje="1.42"
+                         data-aspirantes="32">
+                    </div>
+                    <div class="x-label">20-29</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 50.47%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="30-39"
+                         data-porcentaje="11.79"
+                         data-aspirantes="265">
+                    </div>
+                    <div class="x-label">30-39</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 94.65%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="40-49"
+                         data-porcentaje="22.11"
+                         data-aspirantes="497">
+                    </div>
+                    <div class="x-label">40-49</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 85.49%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="50-59"
+                         data-porcentaje="19.97"
+                         data-aspirantes="449">
+                    </div>
+                    <div class="x-label">50-59</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 59.03%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="60-69"
+                         data-porcentaje="13.79"
+                         data-aspirantes="310">
+                    </div>
+                    <div class="x-label">60-69</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 40.20%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="70-79"
+                         data-porcentaje="9.39"
+                         data-aspirantes="211">
+                    </div>
+                    <div class="x-label">70-79</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 31.42%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="80-89"
+                         data-porcentaje="7.34"
+                         data-aspirantes="165">
+                    </div>
+                    <div class="x-label">80-89</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 29.88%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="90-99"
+                         data-porcentaje="6.98"
+                         data-aspirantes="157">
+                    </div>
+                    <div class="x-label">90-99</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 23.80%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="100-109"
+                         data-porcentaje="5.56"
+                         data-aspirantes="125">
+                    </div>
+                    <div class="x-label">100-109</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 3.81%;"
+                         data-dataset="Examen en línea"
+                         data-grupo="110-120"
+                         data-porcentaje="0.89"
+                         data-aspirantes="20">
+                    </div>
+                    <div class="x-label">110-120</div>
+                </div>
+        
+            </div>
+            <div class="tooltip"></div>
+        </div>
+        <div class="axis-x">Grupo de aciertos</div>
+    </section>
+    
+        
+    <section class="panel">
+        <div class="panel-head">
+            <div>
+                <h2>Examen presencial</h2>
+                <p>12 clases fijas de 10 aciertos; la última clase agrupa 110–120.</p>
+            </div>
+        </div>
+        <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Oferta</div>
+            <div class="stat-value">430</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Aspirantes reportados</div>
+            <div class="stat-value">1,956</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Registros detectados</div>
+            <div class="stat-value">1,956</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Presentaron examen</div>
+            <div class="stat-value">1,315</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Con aciertos numéricos</div>
+            <div class="stat-value">1,284</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Sin aciertos numéricos</div>
+            <div class="stat-value">672</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Aciertos mínimos</div>
+            <div class="stat-value">62</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Seleccionados reportados</div>
+            <div class="stat-value">442</div>
+        </div></div>
+        <div class="chart-wrap" id="chart-presencial">
+            <div class="axis-y">% de aspirantes</div>
+            <div class="bars">
+    
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 0.00%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="0-9"
+                         data-porcentaje="0.0"
+                         data-aspirantes="0">
+                    </div>
+                    <div class="x-label">0-9</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 0.00%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="10-19"
+                         data-porcentaje="0.0"
+                         data-aspirantes="0">
+                    </div>
+                    <div class="x-label">10-19</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 5.65%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="20-29"
+                         data-porcentaje="1.32"
+                         data-aspirantes="17">
+                    </div>
+                    <div class="x-label">20-29</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 69.01%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="30-39"
+                         data-porcentaje="16.12"
+                         data-aspirantes="207">
+                    </div>
+                    <div class="x-label">30-39</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 100.00%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="40-49"
+                         data-porcentaje="23.36"
+                         data-aspirantes="300">
+                    </div>
+                    <div class="x-label">40-49</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 96.36%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="50-59"
+                         data-porcentaje="22.51"
+                         data-aspirantes="289">
+                    </div>
+                    <div class="x-label">50-59</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 79.67%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="60-69"
+                         data-porcentaje="18.61"
+                         data-aspirantes="239">
+                    </div>
+                    <div class="x-label">60-69</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 40.67%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="70-79"
+                         data-porcentaje="9.5"
+                         data-aspirantes="122">
+                    </div>
+                    <div class="x-label">70-79</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 22.99%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="80-89"
+                         data-porcentaje="5.37"
+                         data-aspirantes="69">
+                    </div>
+                    <div class="x-label">80-89</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 9.67%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="90-99"
+                         data-porcentaje="2.26"
+                         data-aspirantes="29">
+                    </div>
+                    <div class="x-label">90-99</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 3.68%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="100-109"
+                         data-porcentaje="0.86"
+                         data-aspirantes="11">
+                    </div>
+                    <div class="x-label">100-109</div>
+                </div>
+        
+                <div class="bar-group">
+                    <div class="bar"
+                         style="height: 0.34%;"
+                         data-dataset="Examen presencial"
+                         data-grupo="110-120"
+                         data-porcentaje="0.08"
+                         data-aspirantes="1">
+                    </div>
+                    <div class="x-label">110-120</div>
+                </div>
+        
+            </div>
+            <div class="tooltip"></div>
+        </div>
+        <div class="axis-x">Grupo de aciertos</div>
+    </section>
+    
+    </main>
+
+    <p class="footer-note">
+        Nota: los registros sin aciertos numéricos incluyen casos como no presentados, cancelados o citas para aclarar situación escolar.
+        Esos registros se muestran en las tarjetas, pero no forman parte del denominador porcentual del histograma.
+    </p>
+</div>
+
+<script>
+const DATA = {"online": {"meta": {"nombre": "Examen en línea", "oferta": 470, "aspirantes_reportados": 3053, "presentaron": 2272, "aciertos_minimos": 80, "seleccionados": 483}, "total_registros_detectados": 3053, "con_aciertos": 2248, "sin_aciertos": 805, "seleccionados_detectados": 483, "no_presentados_detectados": 780, "cancelados_detectados": 9, "histograma": [{"grupo": "0-9", "aspirantes": 12, "porcentaje": 0.53}, {"grupo": "10-19", "aspirantes": 5, "porcentaje": 0.22}, {"grupo": "20-29", "aspirantes": 32, "porcentaje": 1.42}, {"grupo": "30-39", "aspirantes": 265, "porcentaje": 11.79}, {"grupo": "40-49", "aspirantes": 497, "porcentaje": 22.11}, {"grupo": "50-59", "aspirantes": 449, "porcentaje": 19.97}, {"grupo": "60-69", "aspirantes": 310, "porcentaje": 13.79}, {"grupo": "70-79", "aspirantes": 211, "porcentaje": 9.39}, {"grupo": "80-89", "aspirantes": 165, "porcentaje": 7.34}, {"grupo": "90-99", "aspirantes": 157, "porcentaje": 6.98}, {"grupo": "100-109", "aspirantes": 125, "porcentaje": 5.56}, {"grupo": "110-120", "aspirantes": 20, "porcentaje": 0.89}]}, "presencial": {"meta": {"nombre": "Examen presencial", "oferta": 430, "aspirantes_reportados": 1956, "presentaron": 1315, "aciertos_minimos": 62, "seleccionados": 442}, "total_registros_detectados": 1956, "con_aciertos": 1284, "sin_aciertos": 672, "seleccionados_detectados": 411, "no_presentados_detectados": 641, "cancelados_detectados": 0, "histograma": [{"grupo": "0-9", "aspirantes": 0, "porcentaje": 0.0}, {"grupo": "10-19", "aspirantes": 0, "porcentaje": 0.0}, {"grupo": "20-29", "aspirantes": 17, "porcentaje": 1.32}, {"grupo": "30-39", "aspirantes": 207, "porcentaje": 16.12}, {"grupo": "40-49", "aspirantes": 300, "porcentaje": 23.36}, {"grupo": "50-59", "aspirantes": 289, "porcentaje": 22.51}, {"grupo": "60-69", "aspirantes": 239, "porcentaje": 18.61}, {"grupo": "70-79", "aspirantes": 122, "porcentaje": 9.5}, {"grupo": "80-89", "aspirantes": 69, "porcentaje": 5.37}, {"grupo": "90-99", "aspirantes": 29, "porcentaje": 2.26}, {"grupo": "100-109", "aspirantes": 11, "porcentaje": 0.86}, {"grupo": "110-120", "aspirantes": 1, "porcentaje": 0.08}]}, "globalMaxPct": 23.36};
+
+document.querySelectorAll('.chart-wrap').forEach(chart => {
+    const tooltip = chart.querySelector('.tooltip');
+
+    chart.querySelectorAll('.bar').forEach(bar => {
+        bar.addEventListener('mousemove', (event) => {
+            const dataset = bar.dataset.dataset;
+            const grupo = bar.dataset.grupo;
+            const porcentaje = bar.dataset.porcentaje;
+            const aspirantes = bar.dataset.aspirantes;
+
+            tooltip.innerHTML = `
+                <strong>${dataset}</strong>
+                Grupo: ${grupo} aciertos<br>
+                Porcentaje: ${porcentaje}%<br>
+                Aspirantes: ${aspirantes}
+            `;
+
+            const rect = chart.getBoundingClientRect();
+            tooltip.style.left = (event.clientX - rect.left + 14) + 'px';
+            tooltip.style.top = (event.clientY - rect.top - 48) + 'px';
+            tooltip.style.display = 'block';
+        });
+
+        bar.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+        });
+    });
+});
+</script>
+</body>
+</html>
